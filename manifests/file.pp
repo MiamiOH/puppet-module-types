@@ -55,9 +55,9 @@
 #   Target path for the file.
 define types::file (
   Enum['present','absent','file','directory','link'] $ensure = 'present',
-  Optional[String] $owner = 'root',
-  Optional[String] $group = 'root',
-  Optional[String[1,4]] $mode = '0644',
+  String $owner = 'root',
+  String $group = 'root',
+  String[1,4] $mode = '0644',
   Optional[String] $backup = undef,
   Optional[String] $checksum = undef,
   Optional[String] $content = undef,

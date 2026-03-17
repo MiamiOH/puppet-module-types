@@ -1,39 +1,60 @@
 # @summary
-#   Manage various resource types via parameters or Hiera.
+#   Manage resource types (cron, exec, file, etc.) via parameters or Hiera.
 #
 # @description
-#   This class creates resources (cron, exec, file, etc.) from hashes
-#   provided either directly as parameters or via Hiera lookups.
+#   This class creates defined resources from hashes provided either directly
+#   as class parameters or via Hiera lookups.
 #
-#   When *_hiera_merge is true, the corresponding parameter is ignored
-#   and data is loaded from Hiera using a deep merge.
+#   When a *_hiera_merge parameter is set to true, the corresponding parameter
+#   value is ignored and data is loaded from Hiera using a deep merge strategy.
 #
 # @param crons
-#   Hash of cron resources.
+#   Optional hash of cron resources to create.
 #
 # @param execs
-#   Hash of exec resources.
+#   Optional hash of exec resources to create.
 #
 # @param file_lines
-#   Hash of file_line resources.
+#   Optional hash of file_line resources to create.
 #
 # @param files
-#   Hash of file resources.
+#   Optional hash of file resources to create.
 #
 # @param mounts
-#   Hash of mount resources.
+#   Optional hash of mount resources to create.
 #
 # @param packages
-#   Hash of package resources.
+#   Optional hash of package resources to create.
 #
 # @param selbooleans
-#   Hash of selboolean resources.
+#   Optional hash of selboolean resources to create.
 #
 # @param services
-#   Hash of service resources.
+#   Optional hash of service resources to create.
 #
-# @param *_hiera_merge
-#   Boolean to control whether data is sourced from Hiera instead of parameters.
+# @param crons_hiera_merge
+#   If true, load cron resources from Hiera instead of the crons parameter.
+#
+# @param execs_hiera_merge
+#   If true, load exec resources from Hiera instead of the execs parameter.
+#
+# @param file_lines_hiera_merge
+#   If true, load file_line resources from Hiera instead of the file_lines parameter.
+#
+# @param files_hiera_merge
+#   If true, load file resources from Hiera instead of the files parameter.
+#
+# @param mounts_hiera_merge
+#   If true, load mount resources from Hiera instead of the mounts parameter.
+#
+# @param packages_hiera_merge
+#   If true, load package resources from Hiera instead of the packages parameter.
+#
+# @param selbooleans_hiera_merge
+#   If true, load selboolean resources from Hiera instead of the selbooleans parameter.
+#
+# @param services_hiera_merge
+#   If true, load service resources from Hiera instead of the services parameter.
 class types (
   Optional[Hash] $crons                   = undef,
   Optional[Hash] $execs                   = undef,

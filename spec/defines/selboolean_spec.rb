@@ -4,30 +4,29 @@ describe 'types::selboolean' do
 
   context 'selboolean with all options specified' do
     let(:params) do
-      { :persistent => true,
-        :value      => 'on',
-        :provider   => 'getsebool',
-      }
+      { persistent: true,
+        value: 'on',
+        provider: 'getsebool', }
     end
 
     it {
-      should contain_selboolean('nfs_export_all_ro').with({
-        'persistent' => true,
-        'value'      => 'on',
-      })
+      is_expected.to contain_selboolean('nfs_export_all_ro').with({
+                                                                    'persistent' => true,
+        'value' => 'on',
+                                                                  })
     }
   end
 
   describe 'with value' do
-    ['on','off'].each do |value|
+    ['on', 'off'].each do |value|
       context "set to #{value}" do
-        let(:params) { { :value => value } }
+        let(:params) { { value: value } }
 
         it {
-          should contain_selboolean('nfs_export_all_ro').with({
-            'persistent' => false,
-            'value'      => value,
-          })
+          is_expected.to contain_selboolean('nfs_export_all_ro').with({
+                                                                        'persistent' => false,
+            'value' => value,
+                                                                      })
         }
       end
     end
@@ -35,48 +34,49 @@ describe 'types::selboolean' do
 
   context 'selboolean with invalid value for provider' do
     let(:params) do
-      { :provider  => false, }
+      { provider: false, }
     end
-    it 'should fail' do
+
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'selboolean with invalid value for persistent' do
     let(:params) do
-      { :persistent  => 'invalid setting', }
+      { persistent: 'invalid setting', }
     end
-    it 'should fail' do
+
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'selboolean with invalid value for value' do
     let(:params) do
-      { :value       => 'invalid setting', }
+      { value: 'invalid setting', }
     end
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'selboolean with no value - value is mandatory' do
     let(:params) do
-      { :persistent  => false }
+      { persistent: false }
     end
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
-
 end

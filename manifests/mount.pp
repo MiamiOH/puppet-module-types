@@ -42,7 +42,7 @@ define types::mount (
 ) {
   # Ensure mount point exists if not absent
   if $ensure != 'absent' {
-    include ::common
+    include common
     common::mkdir_p { $name: }
   }
 

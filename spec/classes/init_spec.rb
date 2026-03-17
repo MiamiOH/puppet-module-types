@@ -1,21 +1,21 @@
 require 'spec_helper'
 describe 'types' do
-
-  it { should compile.with_all_deps }
+  it { is_expected.to compile.with_all_deps }
 
   context 'with default options' do
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
   end
 
   context 'with mounts specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
-    let(:params) { { :mounts => {
-      '/mnt' => {
-        'device'   => '/dev/dvd',
-        'fstype'   => 'iso9660',
-        'atboot'   => 'no',
-        'remounts' => 'true',
-      },
+    let(:facts) { { osfamily: 'RedHat' } }
+    let(:params) do
+      { mounts: {
+        '/mnt' => {
+          'device'   => '/dev/dvd',
+          'fstype'   => 'iso9660',
+          'atboot'   => 'no',
+          'remounts' => 'true',
+        },
       '/srv/nfs/home' => {
         'device'      => 'nfsserver:/export/home',
         'fstype'      => 'nfs',
@@ -23,51 +23,52 @@ describe 'types' do
         'remounts'    => 'true',
         'blockdevice' => '-',
       }
-    } } }
+      } }
+    end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_mount('/mnt').with({
-        'ensure'   => 'mounted',
+      is_expected.to contain_mount('/mnt').with({
+                                                  'ensure' => 'mounted',
         'device'   => '/dev/dvd',
         'fstype'   => 'iso9660',
         'atboot'   => 'no',
         'remounts' => 'true',
-      })
+                                                })
     }
 
     it {
-      should contain_exec('mkdir_p-/mnt').with({
-        'command' => 'mkdir -p /mnt',
-        'unless'  => 'test -d /mnt',
-      })
+      is_expected.to contain_exec('mkdir_p-/mnt').with({
+                                                         'command' => 'mkdir -p /mnt',
+        'unless' => 'test -d /mnt',
+                                                       })
     }
 
     it {
-      should contain_mount('/srv/nfs/home').with({
-        'device'      => 'nfsserver:/export/home',
+      is_expected.to contain_mount('/srv/nfs/home').with({
+                                                           'device' => 'nfsserver:/export/home',
         'fstype'      => 'nfs',
         'options'     => 'rw,rsize=8192,wsize=8192',
         'remounts'    => 'true',
         'blockdevice' => '-',
-      })
+                                                         })
     }
 
     it {
-      should contain_exec('mkdir_p-/srv/nfs/home').with({
-        'command' => 'mkdir -p /srv/nfs/home',
-        'unless'  => 'test -d /srv/nfs/home',
-      })
+      is_expected.to contain_exec('mkdir_p-/srv/nfs/home').with({
+                                                                  'command' => 'mkdir -p /srv/nfs/home',
+        'unless' => 'test -d /srv/nfs/home',
+                                                                })
     }
   end
 
   context 'with file_lines specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
+    let(:facts) { { osfamily: 'RedHat' } }
     let :params do
       {
-        :file_lines_hiera_merge => 'false',
-        :file_lines => {
+        file_lines_hiera_merge: 'false',
+        file_lines: {
           'some_file' => {
             'path' => '/tmp/foo',
             'line' => 'option=asdf',
@@ -86,42 +87,43 @@ describe 'types' do
       }
     end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_file_line('some_file').with({
-        'path'  => '/tmp/foo',
+      is_expected.to contain_file_line('some_file').with({
+                                                           'path' => '/tmp/foo',
         'line'  => 'option=asdf',
         'match' => nil,
-      })
+                                                         })
     }
 
     it {
-      should contain_file_line('some_other_file').with({
-        'path'  => '/tmp/bar',
+      is_expected.to contain_file_line('some_other_file').with({
+                                                                 'path' => '/tmp/bar',
         'line'  => 'option=asdf',
         'match' => '^option',
-      })
+                                                               })
     }
 
     it {
-      should contain_file_line('another_line').with({
-        'ensure' => 'absent',
+      is_expected.to contain_file_line('another_line').with({
+                                                              'ensure' => 'absent',
         'path'   => '/tmp/bar',
         'line'   => 'param=x',
-      })
+                                                            })
     }
   end
 
   context 'with files specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
-    let(:params) { { :files => {
-      '/localdisk' => {
-        'ensure' => 'directory',
-        'mode'   => '0755',
-        'owner'  => 'root',
-        'group'  => 'root',
-      },
+    let(:facts) { { osfamily: 'RedHat' } }
+    let(:params) do
+      { files: {
+        '/localdisk' => {
+          'ensure' => 'directory',
+          'mode'   => '0755',
+          'owner'  => 'root',
+          'group'  => 'root',
+        },
       '/tmp/file1' => {
         'ensure'                  => 'present',
         'mode'                    => '0777',
@@ -147,8 +149,7 @@ describe 'types' do
         'source'                  => 'puppet://modules/types/mydir',
         'sourceselect'            => 'first',
       },
-      '/tmp/file2' => {
-      },
+      '/tmp/file2' => {},
       '/softlink' => {
         'ensure' => 'link',
         'target' => '/etc/motd',
@@ -159,22 +160,23 @@ describe 'types' do
         'group'                   => 'root',
         'mode'                    => '0777',
       },
-    } } }
+      } }
+    end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_file('/localdisk').with({
-        'ensure'  => 'directory',
+      is_expected.to contain_file('/localdisk').with({
+                                                       'ensure' => 'directory',
         'mode'    => '0755',
         'owner'   => 'root',
         'group'   => 'root',
-      })
+                                                     })
     }
 
     it {
-      should contain_file('/tmp/file1').with({
-        'ensure'                  => 'present',
+      is_expected.to contain_file('/tmp/file1').with({
+                                                       'ensure' => 'present',
         'mode'                    => '0777',
         'owner'                   => 'root',
         'group'                   => 'root',
@@ -197,34 +199,34 @@ describe 'types' do
         'show_diff'               => false,
         'source'                  => 'puppet://modules/types/mydir',
         'sourceselect'            => 'first',
-      })
+                                                     })
     }
 
     it {
-      should contain_file('/tmp/file2').with({
-        'ensure'  => 'present',
+      is_expected.to contain_file('/tmp/file2').with({
+                                                       'ensure' => 'present',
         'mode'    => '0644',
         'owner'   => 'root',
         'group'   => 'root',
-      })
+                                                     })
     }
 
     it {
-      should contain_file('/tmp/dir').with({
-        'ensure'  => 'directory',
+      is_expected.to contain_file('/tmp/dir').with({
+                                                     'ensure' => 'directory',
         'owner'   => 'root',
         'group'   => 'root',
         'mode'    => '0777',
-      })
+                                                   })
     }
   end
 
   context 'with packages specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
+    let(:facts) { { osfamily: 'RedHat' } }
     let :params do
       {
-        :packages_hiera_merge => 'false',
-        :packages => {
+        packages_hiera_merge: 'false',
+        packages: {
           'pkg1' => {
             'ensure'      => 'present',
           },
@@ -238,34 +240,33 @@ describe 'types' do
       }
     end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_package('pkg1').with({
-        'ensure' => 'present',
-      })
+      is_expected.to contain_package('pkg1').with({
+                                                    'ensure' => 'present',
+                                                  })
     }
 
     it {
-      should contain_package('pkg2').with({
-        'ensure' => 'absent',
-      })
+      is_expected.to contain_package('pkg2').with({
+                                                    'ensure' => 'absent',
+                                                  })
     }
 
     it {
-      should contain_package('pkg3').with({
-        'ensure' => 'latest',
-      })
+      is_expected.to contain_package('pkg3').with({
+                                                    'ensure' => 'latest',
+                                                  })
     }
-
   end
 
   context 'with selboolean specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
+    let(:facts) { { osfamily: 'RedHat' } }
     let :params do
       {
-        :selbooleans_hiera_merge => 'false',
-        :selbooleans => {
+        selbooleans_hiera_merge: 'false',
+        selbooleans: {
           'nfs_export_all_ro' => {
             'value' => 'on',
           },
@@ -277,125 +278,127 @@ describe 'types' do
       }
     end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
     it {
-      should contain_selboolean('nfs_export_all_ro').with({
-        'value' => 'on',
-      })
+      is_expected.to contain_selboolean('nfs_export_all_ro').with({
+                                                                    'value' => 'on',
+                                                                  })
     }
     it {
-      should contain_selboolean('nfs_export_all_rw').with({
-        'persistent' => true,
-        'value'      => 'on',
-      })
+      is_expected.to contain_selboolean('nfs_export_all_rw').with({
+                                                                    'persistent' => true,
+        'value' => 'on',
+                                                                  })
     }
   end
 
   context 'with selboolean specified as an invalid type' do
-    let(:facts) { { :osfamily => 'RedHat' } }
-    let(:params) { { :selbooleans => ['not','a','hash'] } }
+    let(:facts) { { osfamily: 'RedHat' } }
+    let(:params) { { selbooleans: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'with mounts specified as an invalid type' do
-    let(:params) { { :mounts => ['not','a','hash'] } }
+    let(:params) { { mounts: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/\["not", "a", "hash"\] is not a Hash\./)
+        is_expected.to contain_class('types')
+      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
     end
   end
 
   context 'with packages specified as an invalid type' do
-    let(:params) { { :packages => ['not','a','hash'] } }
+    let(:params) { { packages: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'with file_lines specified as an invalid type' do
-    let(:params) { { :file_lines => ['not','a','hash'] } }
+    let(:params) { { file_lines: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
 
   context 'with files specified as an invalid type' do
-    let(:params) { { :files => ['not','a','hash'] } }
+    let(:params) { { files: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/\["not", "a", "hash"\] is not a Hash\./)
+        is_expected.to contain_class('types')
+      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
     end
   end
 
   context 'with cron specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
-    let(:params) { { :crons => {
-      'cronjob-1' => {
-        'command' => '/usr/local/bin/some-script.sh',
-        'hour'    => '0',
-        'minute'  => '10',
-        'weekday' => '0',
-      },
+    let(:facts) { { osfamily: 'RedHat' } }
+    let(:params) do
+      { crons: {
+        'cronjob-1' => {
+          'command' => '/usr/local/bin/some-script.sh',
+          'hour'    => '0',
+          'minute'  => '10',
+          'weekday' => '0',
+        },
       'cronjob-2' => {
         'command' => '/usr/local/bin/script.sh',
         'hour'    => '23',
         'minute'  => '0',
         'user'    => 'www-user',
       }
-    } } }
+      } }
+    end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_cron('cronjob-1').with({
-        'ensure'  => 'present',
+      is_expected.to contain_cron('cronjob-1').with({
+                                                      'ensure'  => 'present',
         'command' => '/usr/local/bin/some-script.sh',
         'hour'    => '0',
         'minute'  => '10',
         'weekday' => '0',
-      })
+                                                    })
     }
     it {
-      should contain_cron('cronjob-2').with({
-        'ensure'  => 'present',
+      is_expected.to contain_cron('cronjob-2').with({
+                                                      'ensure'  => 'present',
         'command' => '/usr/local/bin/script.sh',
         'hour'    => '23',
         'minute'  => '0',
         'user'    => 'www-user',
-      })
+                                                    })
     }
   end
 
   context 'with cron specified as an invalid type' do
-    let(:params) { { :crons => ['not','a','hash'] } }
+    let(:params) { { crons: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/\["not", "a", "hash"\] is not a Hash\./)
+        is_expected.to contain_class('types')
+      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
     end
   end
 
   context 'with exec specified as a hash' do
-    let(:facts) { { :osfamily => 'RedHat' } }
+    let(:facts) { { osfamily: 'RedHat' } }
     let(:params) do
       {
-        :execs => {
+        execs: {
           'exec-1' => {
             'command'     => '/usr/local/bin/some-script.sh',
             'creates'     => '/tmp/touch',
@@ -422,11 +425,11 @@ describe 'types' do
       }
     end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it do
-      should contain_types__exec('exec-1').with({
-        'command'     => '/usr/local/bin/some-script.sh',
+      is_expected.to contain_types__exec('exec-1').with({
+                                                          'command'     => '/usr/local/bin/some-script.sh',
         'creates'     => '/tmp/touch',
         'cwd'         => '/tmp',
         'environment' => 'var=value',
@@ -435,11 +438,11 @@ describe 'types' do
         'onlyif'      => '/onlyif.sh',
         'path'        => '/tmp',
         'provider'    => 'shell',
-      })
+                                                        })
     end
     it {
-      should contain_types__exec('exec-2').with({
-        'command'     => '/usr/local/bin/script.sh',
+      is_expected.to contain_types__exec('exec-2').with({
+                                                          'command'     => '/usr/local/bin/script.sh',
         'refresh'     => '/refresh.sh',
         'refreshonly' => true,
         'returns'     => 242,
@@ -448,15 +451,15 @@ describe 'types' do
         'try_sleep'   => 3,
         'unless'      => '/unless.sh',
         'user'        => 'tester',
-      })
+                                                        })
     }
   end
 
   context 'with services specified as a hash' do
     let :params do
       {
-        :services_hiera_merge => 'false',
-        :services => {
+        services_hiera_merge: 'false',
+        services: {
           'service-stopped' => {
             'ensure' => 'stopped',
             'enable' => 'false',
@@ -469,28 +472,28 @@ describe 'types' do
       }
     end
 
-    it { should contain_class('types') }
+    it { is_expected.to contain_class('types') }
 
     it {
-      should contain_service('service-stopped').with({
-        'ensure' => 'stopped',
+      is_expected.to contain_service('service-stopped').with({
+                                                               'ensure' => 'stopped',
         'enable' => 'false',
-      })
+                                                             })
     }
     it {
-      should contain_service('service-running').with({
-        'ensure' => 'running',
+      is_expected.to contain_service('service-running').with({
+                                                               'ensure' => 'running',
         'enable' => 'true',
-      })
+                                                             })
     }
   end
 
   context 'with service specified as an invalid type' do
-    let(:params) { { :services => ['not','a','hash'] } }
+    let(:params) { { services: ['not', 'a', 'hash'] } }
 
-    it 'should fail' do
+    it 'fails' do
       expect {
-        should contain_class('types')
+        is_expected.to contain_class('types')
       }.to raise_error(Puppet::Error)
     end
   end
