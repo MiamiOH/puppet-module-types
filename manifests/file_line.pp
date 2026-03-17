@@ -1,21 +1,24 @@
 # == Define: types::file_line
 #
+# == Define: types::file_line
+#
+# @summary
+#   Manage individual lines in a file using the file_line resource.
+#
+# @param path
+#   Absolute path to the file.
+# @param line
+#   The line to ensure is present or absent.
+# @param match
+#   Optional regex to match an existing line for replacement.
+# @param ensure
+#   Whether the line should be present or absent.
 define types::file_line (
-  $path,
-  $line,
-  $match  = undef,
-  $ensure = 'present',
+  Stdlib::Absolutepath $path,
+  String               $line,
+  Optional[String]     $match  = undef,
+  Enum['present','absent'] $ensure = 'present',
 ) {
-
-  validate_re($ensure, '^(present)|(absent)$',
-    "types::file_line::${name}::ensure is invalid and does not match the regex.")
-  validate_absolute_path($path)
-  validate_string($line)
-
-  if $match {
-    validate_string($match)
-  }
-
   file_line { $name:
     ensure => $ensure,
     path   => $path,

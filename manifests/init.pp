@@ -1,154 +1,168 @@
-# == Class: types
+# @summary
+#   Manage various resource types via parameters or Hiera.
 #
-# Module to manage types
+# @description
+#   This class creates resources (cron, exec, file, etc.) from hashes
+#   provided either directly as parameters or via Hiera lookups.
 #
+#   When *_hiera_merge is true, the corresponding parameter is ignored
+#   and data is loaded from Hiera using a deep merge.
+#
+# @param crons
+#   Hash of cron resources.
+#
+# @param execs
+#   Hash of exec resources.
+#
+# @param file_lines
+#   Hash of file_line resources.
+#
+# @param files
+#   Hash of file resources.
+#
+# @param mounts
+#   Hash of mount resources.
+#
+# @param packages
+#   Hash of package resources.
+#
+# @param selbooleans
+#   Hash of selboolean resources.
+#
+# @param services
+#   Hash of service resources.
+#
+# @param *_hiera_merge
+#   Boolean to control whether data is sourced from Hiera instead of parameters.
 class types (
-  $crons                   = undef,
-  $execs                   = undef,
-  $file_lines              = undef,
-  $files                   = undef,
-  $mounts                  = undef,
-  $packages                = undef,
-  $selbooleans             = undef,
-  $services                = undef,
-  $crons_hiera_merge       = false,
-  $execs_hiera_merge       = false,
-  $file_lines_hiera_merge  = true,
-  $files_hiera_merge       = false,
-  $mounts_hiera_merge      = false,
-  $packages_hiera_merge    = true,
-  $selbooleans_hiera_merge = true,
-  $services_hiera_merge    = true,
+  Optional[Hash] $crons                   = undef,
+  Optional[Hash] $execs                   = undef,
+  Optional[Hash] $file_lines              = undef,
+  Optional[Hash] $files                   = undef,
+  Optional[Hash] $mounts                  = undef,
+  Optional[Hash] $packages                = undef,
+  Optional[Hash] $selbooleans             = undef,
+  Optional[Hash] $services                = undef,
+
+  Variant[Boolean, String] $crons_hiera_merge       = false,
+  Variant[Boolean, String] $execs_hiera_merge       = false,
+  Variant[Boolean, String] $file_lines_hiera_merge  = true,
+  Variant[Boolean, String] $files_hiera_merge       = false,
+  Variant[Boolean, String] $mounts_hiera_merge      = false,
+  Variant[Boolean, String] $packages_hiera_merge    = true,
+  Variant[Boolean, String] $selbooleans_hiera_merge = true,
+  Variant[Boolean, String] $services_hiera_merge    = true,
 ) {
-
-  if is_string($crons_hiera_merge) {
-    $crons_hiera_merge_real = str2bool($crons_hiera_merge)
-  } else {
-    $crons_hiera_merge_real = $crons_hiera_merge
-  }
-  validate_bool($crons_hiera_merge_real)
-
-  $execs_hiera_merge_bool = str2bool($execs_hiera_merge)
-
-  if is_string($file_lines_hiera_merge) {
-    $file_lines_hiera_merge_real = str2bool($file_lines_hiera_merge)
-  } else {
-    $file_lines_hiera_merge_real = $file_lines_hiera_merge
-  }
-  validate_bool($file_lines_hiera_merge_real)
-
-  if is_string($files_hiera_merge) {
-    $files_hiera_merge_real = str2bool($files_hiera_merge)
-  } else {
-    $files_hiera_merge_real = $files_hiera_merge
-  }
-  validate_bool($files_hiera_merge_real)
-
-  if is_string($mounts_hiera_merge) {
-    $mounts_hiera_merge_real = str2bool($mounts_hiera_merge)
-  } else {
-    $mounts_hiera_merge_real = $mounts_hiera_merge
-  }
-  validate_bool($mounts_hiera_merge_real)
-
-  if is_string($packages_hiera_merge) {
-    $packages_hiera_merge_real = str2bool($packages_hiera_merge)
-  } else {
-    $packages_hiera_merge_real = $packages_hiera_merge
-  }
-  validate_bool($packages_hiera_merge_real)
-
-  if is_string($selbooleans_hiera_merge) {
-    $selbooleans_hiera_merge_real = str2bool($selbooleans_hiera_merge)
-  } else {
-    $selbooleans_hiera_merge_real = $selbooleans_hiera_merge
-  }
-  validate_bool($selbooleans_hiera_merge_real)
-
-  if is_string($services_hiera_merge) {
-    $services_hiera_merge_real = str2bool($services_hiera_merge)
-  } else {
-    $services_hiera_merge_real = $services_hiera_merge
-  }
-  validate_bool($services_hiera_merge_real)
+  $crons_hiera_merge_real       = Boolean($crons_hiera_merge)
+  $execs_hiera_merge_real       = Boolean($execs_hiera_merge)
+  $file_lines_hiera_merge_real  = Boolean($file_lines_hiera_merge)
+  $files_hiera_merge_real       = Boolean($files_hiera_merge)
+  $mounts_hiera_merge_real      = Boolean($mounts_hiera_merge)
+  $packages_hiera_merge_real    = Boolean($packages_hiera_merge)
+  $selbooleans_hiera_merge_real = Boolean($selbooleans_hiera_merge)
+  $services_hiera_merge_real    = Boolean($services_hiera_merge)
 
   if $crons != undef {
-    if $crons_hiera_merge_real == true {
-      $crons_real = hiera_hash('types::crons')
-    } else {
-      $crons_real = $crons
+    $crons_real = $crons_hiera_merge_real ? {
+      true  => lookup('types::crons', { merge => 'deep', default_value => {} }),
+      false => $crons,
     }
-    validate_hash($crons_real)
-    create_resources('types::cron',$crons_real)
+
+    $crons_real.each |$title, $params| {
+      types::cron { $title:
+        * => $params,
+      }
+    }
   }
 
   if $execs != undef {
-    if $execs_hiera_merge_bool == true {
-      $execs_real = hiera_hash('types::execs')
-    } else {
-      $execs_real = $execs
+    $execs_real = $execs_hiera_merge_real ? {
+      true  => lookup('types::execs', { merge => 'deep', default_value => {} }),
+      false => $execs,
     }
-    validate_hash($execs_real)
-    create_resources('types::exec',$execs_real)
+
+    $execs_real.each |$title, $params| {
+      types::exec { $title:
+        * => $params,
+      }
+    }
   }
 
   if $file_lines != undef {
-    if $file_lines_hiera_merge_real == true {
-      $file_lines_real = hiera_hash('types::file_lines')
-    } else {
-      $file_lines_real = $file_lines
+    $file_lines_real = $file_lines_hiera_merge_real ? {
+      true  => lookup('types::file_lines', { merge => 'deep', default_value => {} }),
+      false => $file_lines,
     }
-    validate_hash($file_lines_real)
-    create_resources('types::file_line',$file_lines_real)
+
+    $file_lines_real.each |$title, $params| {
+      types::file_line { $title:
+        * => $params,
+      }
+    }
   }
 
   if $files != undef {
-    if $files_hiera_merge_real == true {
-      $files_real = hiera_hash('types::files')
-    } else {
-      $files_real = $files
+    $files_real = $files_hiera_merge_real ? {
+      true  => lookup('types::files', { merge => 'deep', default_value => {} }),
+      false => $files,
     }
-    validate_hash($files_real)
-    create_resources('types::file',$files_real)
+
+    $files_real.each |$title, $params| {
+      types::file { $title:
+        * => $params,
+      }
+    }
   }
 
   if $mounts != undef {
-    if $mounts_hiera_merge_real == true {
-      $mounts_real = hiera_hash('types::mounts')
-    } else {
-      $mounts_real = $mounts
+    $mounts_real = $mounts_hiera_merge_real ? {
+      true  => lookup('types::mounts', { merge => 'deep', default_value => {} }),
+      false => $mounts,
     }
-    validate_hash($mounts_real)
-    create_resources('types::mount',$mounts_real)
+
+    $mounts_real.each |$title, $params| {
+      types::mount { $title:
+        * => $params,
+      }
+    }
   }
 
   if $packages != undef {
-    if $packages_hiera_merge_real == true {
-      $packages_real = hiera_hash('types::packages')
-    } else {
-      $packages_real = $packages
+    $packages_real = $packages_hiera_merge_real ? {
+      true  => lookup('types::packages', { merge => 'deep', default_value => {} }),
+      false => $packages,
     }
-    validate_hash($packages_real)
-    create_resources('types::package',$packages_real)
+
+    $packages_real.each |$title, $params| {
+      types::package { $title:
+        * => $params,
+      }
+    }
   }
 
   if $selbooleans != undef {
-    if $selbooleans_hiera_merge_real == true {
-      $selbooleans_real = hiera_hash('types::selboolean')
-    } else {
-      $selbooleans_real = $selbooleans
+    $selbooleans_real = $selbooleans_hiera_merge_real ? {
+      true  => lookup('types::selbooleans', { merge => 'deep', default_value => {} }),
+      false => $selbooleans,
     }
-    validate_hash($selbooleans_real)
-    create_resources('types::selboolean',$selbooleans_real)
+
+    $selbooleans_real.each |$title, $params| {
+      types::selboolean { $title:
+        * => $params,
+      }
+    }
   }
 
   if $services != undef {
-    if $services_hiera_merge_real == true {
-      $services_real = hiera_hash('types::services')
-    } else {
-      $services_real = $services
+    $services_real = $services_hiera_merge_real ? {
+      true  => lookup('types::services', { merge => 'deep', default_value => {} }),
+      false => $services,
     }
-    validate_hash($services_real)
-    create_resources('types::service',$services_real)
+
+    $services_real.each |$title, $params| {
+      types::service { $title:
+        * => $params,
+      }
+    }
   }
 }

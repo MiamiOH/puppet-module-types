@@ -1,34 +1,53 @@
 # == Define: types::mount
 #
+# == Define: types::mount
+#
+# @summary
+#   Manage mount points in a standardized way.
+#
+# @param device
+#   The device to be mounted (e.g., `/dev/sda1`).
+# @param fstype
+#   The filesystem type (e.g., `ext4`, `xfs`, `nfs`).
+# @param ensure
+#   Whether the mount should be present, absent, mounted, or unmounted.
+# @param atboot
+#   Whether the mount should persist at boot.
+# @param blockdevice
+#   Optional block device path.
+# @param dump
+#   Dump frequency for `dump` command.
+# @param options
+#   Mount options (string or array).
+# @param pass
+#   Pass number for `fsck`.
+# @param provider
+#   Mount provider.
+# @param remounts
+#   Whether the mount can be remounted.
+# @param target
+#   Mount target path.
 define types::mount (
-  $device,
-  $fstype,
-  $ensure      = mounted,
-  $atboot      = true,
-  $blockdevice = undef,
-  $dump        = undef,
-  $options     = undef,
-  $pass        = undef,
-  $provider    = undef,
-  $remounts    = undef,
-  $target      = undef,
+  String $device,
+  String $fstype,
+  Enum['present','absent','mounted','unmounted'] $ensure = 'mounted',
+  Boolean $atboot = true,
+  Optional[Stdlib::Absolutepath] $blockdevice = undef,
+  Optional[Integer] $dump = undef,
+  Optional[Variant[String, Array[String]]] $options = undef,
+  Optional[Integer] $pass = undef,
+  Optional[String] $provider = undef,
+  Optional[Boolean] $remounts = undef,
+  Optional[Stdlib::Absolutepath] $target = undef,
 ) {
-
-  # validate params
-  validate_re($ensure, '^(present)|(unmounted)|(absent)|(mounted)$',
-    "types::mount::${name}::ensure is invalid and does not match the regex.")
-  validate_absolute_path($name)
-
+  # Ensure mount point exists if not absent
   if $ensure != 'absent' {
-    # ensure target exists
     include ::common
     common::mkdir_p { $name: }
   }
 
-  # Solaris cannot handle 'defaults' as a mount option. A common use case would
-  # be to have NFS exports specified in Hiera for multiple systems and if the
-  # system is Solaris, it would throw an error.
-  if $options == 'defaults' and $::osfamily == 'Solaris' {
+  # Solaris cannot handle 'defaults' as a mount option
+  if $options == 'defaults' and $facts['os']['family'] == 'Solaris' {
     $options_real = '-'
   } else {
     $options_real = $options
@@ -49,6 +68,7 @@ define types::mount (
     target      => $target,
   }
 
+  # Enforce dependency on directory creation
   if $ensure != 'absent' {
     Common::Mkdir_p[$name] -> Mount[$name]
   }
