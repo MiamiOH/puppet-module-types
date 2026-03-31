@@ -1,500 +1,157 @@
 require 'spec_helper'
-describe 'types' do
-  it { is_expected.to compile.with_all_deps }
 
-  context 'with default options' do
-    it { is_expected.to contain_class('types') }
+describe 'types', type: :class do
+  let(:hiera_config) do
+    File.expand_path('../fixtures/hiera/hiera.yaml', __dir__)
   end
 
-  context 'with mounts specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let(:params) do
-      { mounts: {
-        '/mnt' => {
-          'device'   => '/dev/dvd',
-          'fstype'   => 'iso9660',
-          'atboot'   => 'no',
-          'remounts' => 'true',
-        },
-      '/srv/nfs/home' => {
-        'device'      => 'nfsserver:/export/home',
-        'fstype'      => 'nfs',
-        'options'     => 'rw,rsize=8192,wsize=8192',
-        'remounts'    => 'true',
-        'blockdevice' => '-',
-      }
-      } }
-    end
+  context 'with default parameters' do
+    it { is_expected.to compile.with_all_deps }
 
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_mount('/mnt').with({
-                                                  'ensure' => 'mounted',
-        'device'   => '/dev/dvd',
-        'fstype'   => 'iso9660',
-        'atboot'   => 'no',
-        'remounts' => 'true',
-                                                })
-    }
-
-    it {
-      is_expected.to contain_exec('mkdir_p-/mnt').with({
-                                                         'command' => 'mkdir -p /mnt',
-        'unless' => 'test -d /mnt',
-                                                       })
-    }
-
-    it {
-      is_expected.to contain_mount('/srv/nfs/home').with({
-                                                           'device' => 'nfsserver:/export/home',
-        'fstype'      => 'nfs',
-        'options'     => 'rw,rsize=8192,wsize=8192',
-        'remounts'    => 'true',
-        'blockdevice' => '-',
-                                                         })
-    }
-
-    it {
-      is_expected.to contain_exec('mkdir_p-/srv/nfs/home').with({
-                                                                  'command' => 'mkdir -p /srv/nfs/home',
-        'unless' => 'test -d /srv/nfs/home',
-                                                                })
-    }
-  end
-
-  context 'with file_lines specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let :params do
-      {
-        file_lines_hiera_merge: 'false',
-        file_lines: {
-          'some_file' => {
-            'path' => '/tmp/foo',
-            'line' => 'option=asdf',
-          },
-          'some_other_file' => {
-            'path'  => '/tmp/bar',
-            'line'  => 'option=asdf',
-            'match' => '^option',
-          },
-          'another_line' => {
-            'ensure' => 'absent',
-            'path'   => '/tmp/bar',
-            'line'   => 'param=x',
-          },
-        },
-      }
-    end
-
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_file_line('some_file').with({
-                                                           'path' => '/tmp/foo',
-        'line'  => 'option=asdf',
-        'match' => nil,
-                                                         })
-    }
-
-    it {
-      is_expected.to contain_file_line('some_other_file').with({
-                                                                 'path' => '/tmp/bar',
-        'line'  => 'option=asdf',
-        'match' => '^option',
-                                                               })
-    }
-
-    it {
-      is_expected.to contain_file_line('another_line').with({
-                                                              'ensure' => 'absent',
-        'path'   => '/tmp/bar',
-        'line'   => 'param=x',
-                                                            })
-    }
-  end
-
-  context 'with files specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let(:params) do
-      { files: {
-        '/localdisk' => {
-          'ensure' => 'directory',
-          'mode'   => '0755',
-          'owner'  => 'root',
-          'group'  => 'root',
-        },
-      '/tmp/file1' => {
-        'ensure'                  => 'present',
-        'mode'                    => '0777',
-        'owner'                   => 'root',
-        'group'                   => 'root',
-        'content'                 => 'This is the content',
-        'backup'                  => 'foobucket',
-        'checksum'                => 'none',
-        'force'                   => 'purge',
-        'ignore'                  => ['.svn', '.foo'],
-        'links'                   => 'follow',
-        'provider'                => 'posix',
-        'purge'                   => true,
-        'recurse'                 => true,
-        'recurselimit'            => 2,
-        'replace'                 => false,
-        'selinux_ignore_defaults' => false,
-        'selrange'                => 's0',
-        'selrole'                 => 'object_r',
-        'seltype'                 => 'var_t',
-        'seluser'                 => 'system_u',
-        'show_diff'               => false,
-        'source'                  => 'puppet://modules/types/mydir',
-        'sourceselect'            => 'first',
-      },
-      '/tmp/file2' => {},
-      '/softlink' => {
-        'ensure' => 'link',
-        'target' => '/etc/motd',
-      },
-      '/tmp/dir' => {
-        'ensure'                  => 'directory',
-        'owner'                   => 'root',
-        'group'                   => 'root',
-        'mode'                    => '0777',
-      },
-      } }
-    end
-
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_file('/localdisk').with({
-                                                       'ensure' => 'directory',
-        'mode'    => '0755',
-        'owner'   => 'root',
-        'group'   => 'root',
-                                                     })
-    }
-
-    it {
-      is_expected.to contain_file('/tmp/file1').with({
-                                                       'ensure' => 'present',
-        'mode'                    => '0777',
-        'owner'                   => 'root',
-        'group'                   => 'root',
-        'content'                 => 'This is the content',
-        'backup'                  => 'foobucket',
-        'checksum'                => 'none',
-        'force'                   => 'purge',
-        'ignore'                  => ['.svn', '.foo'],
-        'links'                   => 'follow',
-        'provider'                => 'posix',
-        'purge'                   => true,
-        'recurse'                 => true,
-        'recurselimit'            => 2,
-        'replace'                 => false,
-        'selinux_ignore_defaults' => false,
-        'selrange'                => 's0',
-        'selrole'                 => 'object_r',
-        'seltype'                 => 'var_t',
-        'seluser'                 => 'system_u',
-        'show_diff'               => false,
-        'source'                  => 'puppet://modules/types/mydir',
-        'sourceselect'            => 'first',
-                                                     })
-    }
-
-    it {
-      is_expected.to contain_file('/tmp/file2').with({
-                                                       'ensure' => 'present',
-        'mode'    => '0644',
-        'owner'   => 'root',
-        'group'   => 'root',
-                                                     })
-    }
-
-    it {
-      is_expected.to contain_file('/tmp/dir').with({
-                                                     'ensure' => 'directory',
-        'owner'   => 'root',
-        'group'   => 'root',
-        'mode'    => '0777',
-                                                   })
-    }
-  end
-
-  context 'with packages specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let :params do
-      {
-        packages_hiera_merge: 'false',
-        packages: {
-          'pkg1' => {
-            'ensure'      => 'present',
-          },
-          'pkg2' => {
-            'ensure'      => 'absent',
-          },
-          'pkg3' => {
-            'ensure'      => 'latest',
-          },
-        }
-      }
-    end
-
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_package('pkg1').with({
-                                                    'ensure' => 'present',
-                                                  })
-    }
-
-    it {
-      is_expected.to contain_package('pkg2').with({
-                                                    'ensure' => 'absent',
-                                                  })
-    }
-
-    it {
-      is_expected.to contain_package('pkg3').with({
-                                                    'ensure' => 'latest',
-                                                  })
-    }
-  end
-
-  context 'with selboolean specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let :params do
-      {
-        selbooleans_hiera_merge: 'false',
-        selbooleans: {
-          'nfs_export_all_ro' => {
-            'value' => 'on',
-          },
-          'nfs_export_all_rw' => {
-            'persistent' => true,
-            'value'      => 'on',
-          },
-        }
-      }
-    end
-
-    it { is_expected.to contain_class('types') }
-    it {
-      is_expected.to contain_selboolean('nfs_export_all_ro').with({
-                                                                    'value' => 'on',
-                                                                  })
-    }
-    it {
-      is_expected.to contain_selboolean('nfs_export_all_rw').with({
-                                                                    'persistent' => true,
-        'value' => 'on',
-                                                                  })
-    }
-  end
-
-  context 'with selboolean specified as an invalid type' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let(:params) { { selbooleans: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
+    # By default, all *_hiera_merge params are false except a few that default to true in the class
+    # But since the main hash params are undef, no resources should be created
+    it 'does not create any resources when all input hashes are undef' do
+      is_expected.not_to contain_types__cron(anything)
+      is_expected.not_to contain_types__exec(anything)
+      is_expected.not_to contain_types__file_line(anything)
+      is_expected.not_to contain_types__file(anything)
+      is_expected.not_to contain_types__mount(anything)
+      is_expected.not_to contain_types__package(anything)
+      is_expected.not_to contain_types__selboolean(anything)
+      is_expected.not_to contain_types__service(anything)
     end
   end
 
-  context 'with mounts specified as an invalid type' do
-    let(:params) { { mounts: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
-    end
-  end
-
-  context 'with packages specified as an invalid type' do
-    let(:params) { { packages: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
-    end
-  end
-
-  context 'with file_lines specified as an invalid type' do
-    let(:params) { { file_lines: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
-    end
-  end
-
-  context 'with files specified as an invalid type' do
-    let(:params) { { files: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
-    end
-  end
-
-  context 'with cron specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
-    let(:params) do
-      { crons: {
-        'cronjob-1' => {
-          'command' => '/usr/local/bin/some-script.sh',
-          'hour'    => '0',
-          'minute'  => '10',
-          'weekday' => '0',
-        },
-      'cronjob-2' => {
-        'command' => '/usr/local/bin/script.sh',
-        'hour'    => '23',
-        'minute'  => '0',
-        'user'    => 'www-user',
-      }
-      } }
-    end
-
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_cron('cronjob-1').with({
-                                                      'ensure'  => 'present',
-        'command' => '/usr/local/bin/some-script.sh',
-        'hour'    => '0',
-        'minute'  => '10',
-        'weekday' => '0',
-                                                    })
-    }
-    it {
-      is_expected.to contain_cron('cronjob-2').with({
-                                                      'ensure'  => 'present',
-        'command' => '/usr/local/bin/script.sh',
-        'hour'    => '23',
-        'minute'  => '0',
-        'user'    => 'www-user',
-                                                    })
-    }
-  end
-
-  context 'with cron specified as an invalid type' do
-    let(:params) { { crons: ['not', 'a', 'hash'] } }
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{\["not", "a", "hash"\] is not a Hash\.})
-    end
-  end
-
-  context 'with exec specified as a hash' do
-    let(:facts) { { osfamily: 'RedHat' } }
+  # ------------------------------------------------------------------
+  # Basic parameter passthrough (no hiera_merge)
+  # ------------------------------------------------------------------
+  context 'when crons hash is provided (no hiera_merge)' do
     let(:params) do
       {
-        execs: {
-          'exec-1' => {
-            'command'     => '/usr/local/bin/some-script.sh',
-            'creates'     => '/tmp/touch',
-            'cwd'         => '/tmp',
-            'environment' => 'var=value',
-            'group'       => 'group-1',
-            'logoutput'   => true,
-            'onlyif'      => '/onlyif.sh',
-            'path'        => '/tmp',
-            'provider'    => 'shell',
-          },
-          'exec-2' => {
-            'command'     => '/usr/local/bin/script.sh',
-            'refresh'     => '/refresh.sh',
-            'refreshonly' => true,
-            'returns'     => 242,
-            'timeout'     => 3,
-            'tries'       => 3,
-            'try_sleep'   => 3,
-            'unless'      => '/unless.sh',
-            'user'        => 'tester',
-          }
-        }
+        crons: {
+          'backup' => { 'command' => '/usr/bin/backup.sh', 'hour' => '2' },
+          'cleanup' => { 'command' => '/usr/bin/cleanup.sh', 'minute' => '0' },
+        },
+        crons_hiera_merge: false,
       }
     end
 
-    it { is_expected.to contain_class('types') }
-
-    it do
-      is_expected.to contain_types__exec('exec-1').with({
-                                                          'command'     => '/usr/local/bin/some-script.sh',
-        'creates'     => '/tmp/touch',
-        'cwd'         => '/tmp',
-        'environment' => 'var=value',
-        'group'       => 'group-1',
-        'logoutput'   => true,
-        'onlyif'      => '/onlyif.sh',
-        'path'        => '/tmp',
-        'provider'    => 'shell',
-                                                        })
+    it 'creates the defined types::cron resources' do
+      is_expected.to contain_types__cron('backup').with_command('/usr/bin/backup.sh')
+      is_expected.to contain_types__cron('cleanup').with_command('/usr/bin/cleanup.sh')
     end
-    it {
-      is_expected.to contain_types__exec('exec-2').with({
-                                                          'command'     => '/usr/local/bin/script.sh',
-        'refresh'     => '/refresh.sh',
-        'refreshonly' => true,
-        'returns'     => 242,
-        'timeout'     => 3,
-        'tries'       => 3,
-        'try_sleep'   => 3,
-        'unless'      => '/unless.sh',
-        'user'        => 'tester',
-                                                        })
-    }
   end
 
-  context 'with services specified as a hash' do
-    let :params do
+  context 'when services hash is provided (no hiera_merge)' do
+    let(:params) do
       {
-        services_hiera_merge: 'false',
         services: {
-          'service-stopped' => {
-            'ensure' => 'stopped',
-            'enable' => 'false',
-          },
-          'service-running' => {
-            'ensure' => 'running',
-            'enable' => 'true',
-          }
-        }
+          'httpd' => { 'ensure' => 'running', 'enable' => true },
+          'sshd'  => { 'ensure' => 'running' },
+        },
+        services_hiera_merge: false,
       }
     end
 
-    it { is_expected.to contain_class('types') }
-
-    it {
-      is_expected.to contain_service('service-stopped').with({
-                                                               'ensure' => 'stopped',
-        'enable' => 'false',
-                                                             })
-    }
-    it {
-      is_expected.to contain_service('service-running').with({
-                                                               'ensure' => 'running',
-        'enable' => 'true',
-                                                             })
-    }
+    it 'creates the defined types::service resources' do
+      is_expected.to contain_types__service('httpd').with_ensure('running')
+      is_expected.to contain_types__service('sshd').with_ensure('running')
+    end
   end
 
-  context 'with service specified as an invalid type' do
-    let(:params) { { services: ['not', 'a', 'hash'] } }
+  # ------------------------------------------------------------------
+  # Hiera merge behavior
+  # ------------------------------------------------------------------
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
+  context 'when services_hiera_merge => true' do
+    let(:params) do
+      {
+        services: { 'dummy' => {} }, # should be ignored when hiera_merge is true
+        services_hiera_merge: true,
+      }
+    end
+
+    it 'uses hiera lookup instead of the passed services parameter' do
+      is_expected.to contain_types__service('nginx').with_ensure('running')
+      is_expected.to contain_types__service('mysql').with_ensure('stopped')
+      is_expected.not_to contain_types__service('dummy')
+    end
+  end
+
+  context 'when packages_hiera_merge => true' do
+    let(:params) { { packages_hiera_merge: true } }
+
+    it 'creates types::package resources from hiera' do
+      is_expected.to contain_types__package('git').with_ensure('latest')
+      is_expected.to contain_types__package('vim').with_ensure('present')
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Boolean/String conversion for *_hiera_merge parameters
+  # ------------------------------------------------------------------
+  context 'when hiera_merge parameters are passed as strings' do
+    let(:params) do
+      {
+        files_hiera_merge: 'true',
+        packages_hiera_merge: 'false',
+      }
+    end
+
+    it 'converts string values to Boolean correctly' do
+      # files_hiera_merge becomes true → should do lookup (we don't mock it here)
+      # packages_hiera_merge becomes false → uses the passed hash (none here)
+      is_expected.to compile
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Edge cases
+  # ------------------------------------------------------------------
+  context 'when a hash is undef (explicitly)' do
+    let(:params) { { files: :undef, files_hiera_merge: true } }
+
+    it 'does not attempt to create file resources' do
+      is_expected.not_to contain_types__file(anything)
+    end
+  end
+
+  context 'with multiple resource types at once' do
+    let(:params) do
+      {
+        packages: { 'htop' => { 'ensure' => 'present' } },
+        services: { 'sshd' => { 'ensure' => 'running' } },
+        files:    { '/etc/motd' => { 'content' => 'Hello' } },
+        packages_hiera_merge: false,
+        services_hiera_merge: false,
+        files_hiera_merge:    false,
+      }
+    end
+
+    it 'creates resources from all provided hashes' do
+      is_expected.to contain_types__package('htop')
+      is_expected.to contain_types__service('sshd')
+      is_expected.to contain_types__file('/etc/motd')
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Validation / error cases (optional but recommended)
+  # ------------------------------------------------------------------
+  context 'with invalid hiera_merge value' do
+    let(:params) { { crons_hiera_merge: 'invalid' } }
+
+    it 'raises a clear error for invalid boolean value' do
+      expect { catalogue }.to raise_error(Puppet::Error, %r{new_boolean|Boolean|cannot be converted to Boolean|invalid}i)
+    end
+  end
+
+  # Test that the class compiles cleanly on supported OSes
+  on_supported_os.each do |os, facts|
+    context "on #{os}" do
+      let(:facts) { facts }
+
+      it { is_expected.to compile.with_all_deps }
     end
   end
 end

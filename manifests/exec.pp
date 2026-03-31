@@ -1,7 +1,5 @@
 # == Define: types::exec
 #
-# == Define: types::exec
-#
 # @summary
 #   Manage exec resources in a standardized way.
 #
@@ -45,8 +43,8 @@ define types::exec (
   Optional[Stdlib::Absolutepath] $cwd = undef,
   Optional[Variant[String, Array[String]]] $environment = undef,
   Optional[String] $group = undef,
-  Optional[String] $logoutput = undef,
-  Optional[String] $onlyif = undef,
+  Optional[Variant[String, Boolean]] $logoutput = undef,
+  Optional[Variant[String, Array[String]]] $onlyif = undef,
   Optional[Variant[String, Array[String]]] $path = undef,
   Optional[Enum['posix','shell','windows']] $provider = undef,
   Optional[String] $refresh = undef,
@@ -55,7 +53,7 @@ define types::exec (
   Optional[Integer] $timeout = undef,
   Optional[Integer] $tries = undef,
   Optional[Integer] $try_sleep = undef,
-  Optional[String] $unless = undef,
+  Optional[Variant[String, Array[String]]] $unless = undef,
   Optional[String] $user = undef,
 ) {
   exec { $name:

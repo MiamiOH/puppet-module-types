@@ -10,7 +10,7 @@
   "dependencies": [
     {
       "name": "puppetlabs/stdlib",
-      "version_requirement": ">= 6.5.0 < 10.0.0"
+      "version_requirement": ">= 8.0.0 < 10.0.0"
     },
     {
       "name": "ghoneycutt/common",
@@ -18,15 +18,15 @@
     },
     {
       "name": "puppetlabs/cron_core",
-      "version_requirement": ">= 1.0.0 < 2.0.2"
+      "version_requirement": ">= 1.1.0 < 2.0.2"
     },
     {
       "name": "puppetlabs/mount_core",
-      "version_requirement": ">= 1.0.2 < 2.0.1"
+      "version_requirement": ">= 1.1.0 < 2.0.1"
     },
     {
       "name": "puppetlabs/selinux_core",
-      "version_requirement": ">= 1.0.1 < 2.0.1"
+      "version_requirement": ">= 1.1.0 < 2.0.1"
     }
   ],
   "operatingsystem_support": [
@@ -67,7 +67,6 @@
       "version_requirement": ">= 7.0.0 < 8.0.0"
     }
   ],
-  "description": "Puppet module to manage default types through hashes in Hiera with the\ncreate_resources() function. This module adds validation and helper functions,\nsuch as ensuring directories. Without specifying any hashes, this module will take no action.",
   "pdk-version": "3.2.0",
   "template-url": "pdk-default#3.2.0",
   "template-ref": "tags/3.2.0-0-gb257ef1"

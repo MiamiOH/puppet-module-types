@@ -1,127 +1,144 @@
 require 'spec_helper'
 
 describe 'types::mount' do
-  context 'mount with bare minimum specified' do
-    let(:title) { '/mnt' }
-    let(:params) do
-      { device: '/dev/dvd',
-        fstype: 'iso9660', }
-    end
-    let(:facts) { { osfamily: 'RedHat' } }
+  let(:title) { '/mnt' }
 
-    it {
-      is_expected.to contain_mount('/mnt').with({
-                                                  'ensure' => 'mounted',
-        'name'   => '/mnt',
-        'atboot' => true,
-        'device' => '/dev/dvd',
-        'fstype' => 'iso9660',
-                                                })
-    }
-  end
+  on_supported_os.each do |os, os_facts|
+    context "on #{os}" do
+      let(:facts) { os_facts }
 
-  context 'mount with all options specified' do
-    let(:title) { '/mnt' }
-    let(:params) do
-      { device: '/dev/fiction',
-        fstype: 'iso9660',
-        ensure: 'absent',
-        atboot: false,
-        blockdevice: '/dev/blockdevice',
-        dump: '1',
-        options: 'ro',
-        pass: '1',
-        provider: 'customprovider',
-        remounts: true,  }
-    end
-    let(:facts) { { osfamily: 'RedHat' } }
+      context 'with minimal parameters' do
+        let(:params) do
+          {
+            device: '/dev/dvd',
+            fstype: 'iso9660',
+          }
+        end
 
-    it {
-      is_expected.to contain_mount('/mnt').with({
-                                                  'ensure' => 'absent',
-        'atboot'      => false,
-        'device'      => '/dev/fiction',
-        'fstype'      => 'iso9660',
-        'name'        => '/mnt',
-        'blockdevice' => '/dev/blockdevice',
-        'dump'        => '1',
-        'options'     => 'ro',
-        'pass'        => '1',
-        'provider'    => 'customprovider',
-        'remounts'    => true,
-                                                })
-    }
-  end
+        it { is_expected.to compile }
 
-  context 'mount with invalid ensure' do
-    let(:title) { 'invalid' }
-    let(:params) do
-      { device: '/dev/fiction',
-        fstype: 'iso9660',
-        target: '/mnt',
-        ensure: '!invalid', }
-    end
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{types::mount::invalid::ensure is invalid and does not match the regex\.})
-    end
-  end
-
-  describe 'with \'ensure\' parameter set to \'absent\'' do
-    context 'on osfamily RedHat' do
-      let(:title) { '/mnt/test' }
-      let(:params) do
-        { ensure: 'absent',
-          device: '/dev/fiction',
-          fstype: 'iso9660', }
+        it do
+          is_expected.to contain_mount('/mnt').with(
+            ensure: 'mounted',
+            name: '/mnt',
+            atboot: true,
+            device: '/dev/dvd',
+            fstype: 'iso9660',
+          )
+        end
       end
-      let(:facts) { { osfamily: 'RedHat' } }
 
-      it {
-        is_expected.not_to contain_exec('mkdir_p-/mnt/test')
-      }
-    end
-  end
+      context 'with all parameters' do
+        let(:params) do
+          {
+            device:      '/dev/fiction',
+            fstype:      'iso9660',
+            ensure:      'absent',
+            atboot:      false,
+            blockdevice: '/dev/blockdevice',
+            dump:        1,
+            options:     'ro',
+            pass:        1,
+            remounts:    true,
+            # provider removed for cross-OS compatibility
+          }
+        end
 
-  describe 'with \'options\' parameter set to \'defaults\'' do
-    context 'on osfamily Solaris' do
-      let(:title) { '/mnt' }
-      let(:params) do
-        { device: '/dev/fiction',
-          fstype: 'iso9660',
-          options: 'defaults', }
+        it { is_expected.to compile }
+
+        it do
+          is_expected.to contain_mount('/mnt').with(
+            ensure:      'absent',
+            atboot:      false,
+            device:      '/dev/fiction',
+            fstype:      'iso9660',
+            name:        '/mnt',
+            blockdevice: '/dev/blockdevice',
+            dump:        1,
+            options:     'ro',
+            pass:        1,
+            remounts:    true,
+          )
+        end
       end
-      let(:facts) { { osfamily: 'Solaris' } }
 
-      it {
-        is_expected.to contain_mount('/mnt').with({
-                                                    'ensure' => 'mounted',
-          'device'  => '/dev/fiction',
-          'fstype'  => 'iso9660',
-          'options' => '-',
-                                                  })
-      }
-    end
+      context 'with invalid ensure' do
+        let(:params) do
+          {
+            device: '/dev/fiction',
+            fstype: 'iso9660',
+            ensure: '!invalid',
+          }
+        end
 
-    context 'on osfamily that is not Solaris' do
-      let(:title) { '/mnt' }
-      let(:params) do
-        { device: '/dev/fiction',
-          fstype: 'iso9660',
-          options: 'defaults', }
+        it 'fails' do
+          expect { catalogue }.to raise_error(
+            Puppet::Error,
+            %r{expects a match for Enum},
+          )
+        end
       end
-      let(:facts) { { osfamily: 'Debian' } }
 
-      it {
-        is_expected.to contain_mount('/mnt').with({
-                                                    'ensure' => 'mounted',
-          'device'      => '/dev/fiction',
-          'fstype'      => 'iso9660',
-          'options'     => 'defaults',
-                                                  })
-      }
+      context "when ensure => 'absent'" do
+        let(:title) { '/mnt/test' }
+        let(:params) do
+          {
+            ensure: 'absent',
+            device: '/dev/fiction',
+            fstype: 'iso9660',
+          }
+        end
+
+        it { is_expected.to compile }
+
+        it do
+          is_expected.not_to contain_common__mkdir_p('/mnt/test')
+        end
+      end
+
+      context "when options => 'defaults'" do
+        context 'on Solaris' do
+          let(:facts) do
+            os_facts.merge(
+              os: { 'family' => 'Solaris' },
+            )
+          end
+
+          let(:params) do
+            {
+              device: '/dev/fiction',
+              fstype: 'iso9660',
+              options: 'defaults',
+            }
+          end
+
+          it { is_expected.to compile }
+
+          it do
+            is_expected.to contain_mount('/mnt').with(
+              options: '-',
+            )
+          end
+        end
+
+        context 'on non-Solaris' do
+          let(:params) do
+            {
+              device: '/dev/fiction',
+              fstype: 'iso9660',
+              options: 'defaults',
+            }
+          end
+
+          it { is_expected.to compile }
+
+          it do
+            is_expected.to contain_mount('/mnt').with(
+              options: 'defaults',
+            )
+          end
+        end
+      end
     end
   end
 end

@@ -1,7 +1,5 @@
 # == Define: types::file
 #
-# == Define: types::file
-#
 # @summary
 #   Manage files and directories with standardized parameters.
 #
@@ -57,7 +55,7 @@ define types::file (
   Enum['present','absent','file','directory','link'] $ensure = 'present',
   String $owner = 'root',
   String $group = 'root',
-  String[1,4] $mode = '0644',
+  Pattern[/\A[0-7]{4}\z/] $mode = '0644',
   Optional[String] $backup = undef,
   Optional[String] $checksum = undef,
   Optional[String] $content = undef,
@@ -79,6 +77,10 @@ define types::file (
   Optional[Enum['first','all']] $sourceselect = undef,
   Optional[Stdlib::Absolutepath] $target = undef,
 ) {
+  if $content != undef and $source != undef {
+    fail('cannot set both content and source')
+  }
+
   file { $name:
     ensure                  => $ensure,
     owner                   => $owner,

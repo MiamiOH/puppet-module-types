@@ -1,7 +1,5 @@
 # == Define: types::mount
 #
-# == Define: types::mount
-#
 # @summary
 #   Manage mount points in a standardized way.
 #
@@ -33,20 +31,18 @@ define types::mount (
   Enum['present','absent','mounted','unmounted'] $ensure = 'mounted',
   Boolean $atboot = true,
   Optional[Stdlib::Absolutepath] $blockdevice = undef,
-  Optional[Integer] $dump = undef,
+  Optional[Variant[Integer, String]] $dump = undef,
   Optional[Variant[String, Array[String]]] $options = undef,
-  Optional[Integer] $pass = undef,
+  Optional[Variant[Integer, String]] $pass = undef,
   Optional[String] $provider = undef,
   Optional[Boolean] $remounts = undef,
   Optional[Stdlib::Absolutepath] $target = undef,
 ) {
-  # Ensure mount point exists if not absent
   if $ensure != 'absent' {
     include common
     common::mkdir_p { $name: }
   }
 
-  # Solaris cannot handle 'defaults' as a mount option
   if $options == 'defaults' and $facts['os']['family'] == 'Solaris' {
     $options_real = '-'
   } else {
@@ -68,7 +64,6 @@ define types::mount (
     target      => $target,
   }
 
-  # Enforce dependency on directory creation
   if $ensure != 'absent' {
     Common::Mkdir_p[$name] -> Mount[$name]
   }

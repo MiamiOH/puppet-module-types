@@ -1,7 +1,5 @@
 # == Define: types::package
 #
-# == Define: types::package
-#
 # @summary
 #   Manage packages in a standardized way.
 #
@@ -24,7 +22,10 @@
 # @param uninstall_options
 #   Options passed to the package provider for uninstallation.
 define types::package (
-  Enum['present','absent','installed','purged'] $ensure = 'present',
+  Variant[
+    Enum['present','absent','purged','disabled','installed','latest'],
+    String[1]
+  ] $ensure = 'present',
   Optional[Stdlib::Absolutepath] $adminfile = undef,
   Optional[Boolean] $allowcdrom = undef,
   Optional[Enum['keep','replace']] $configfiles = undef,

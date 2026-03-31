@@ -1,60 +1,94 @@
 # @summary
-#   Manage resource types (cron, exec, file, etc.) via parameters or Hiera.
+#   Manage common native Puppet resource types via Hiera data or class parameters.
 #
 # @description
-#   This class creates defined resources from hashes provided either directly
-#   as class parameters or via Hiera lookups.
+#   The `types` class provides a unified interface for declaring multiple native
+#   Puppet resource types (such as cron, package, service, file, mount, etc.)
+#   using simple Hash structures.
 #
-#   When a *_hiera_merge parameter is set to true, the corresponding parameter
-#   value is ignored and data is loaded from Hiera using a deep merge strategy.
+#   Each supported resource type can be supplied directly as a parameter or
+#   loaded from Hiera. When a corresponding `*_hiera_merge` option is enabled,
+#   the class performs a deep merge lookup from Hiera instead of using the
+#   provided parameter value.
+#
+#   This pattern enables scalable, data-driven resource management while still
+#   allowing per-node or per-role overrides.
 #
 # @param crons
-#   Optional hash of cron resources to create.
+#   Hash of cron resources to create.
 #
 # @param execs
-#   Optional hash of exec resources to create.
+#   Hash of exec resources to create.
 #
 # @param file_lines
-#   Optional hash of file_line resources to create.
+#   Hash of file_line resources to create.
 #
 # @param files
-#   Optional hash of file resources to create.
+#   Hash of file resources to create.
 #
 # @param mounts
-#   Optional hash of mount resources to create.
+#   Hash of mount resources to create.
 #
 # @param packages
-#   Optional hash of package resources to create.
+#   Hash of package resources to create.
 #
 # @param selbooleans
-#   Optional hash of selboolean resources to create.
+#   Hash of SELinux boolean resources to manage.
 #
 # @param services
-#   Optional hash of service resources to create.
+#   Hash of service resources to manage.
 #
 # @param crons_hiera_merge
-#   If true, load cron resources from Hiera instead of the crons parameter.
+#   Whether to load cron definitions from Hiera using deep merge.
 #
 # @param execs_hiera_merge
-#   If true, load exec resources from Hiera instead of the execs parameter.
+#   Whether to load exec definitions from Hiera using deep merge.
 #
 # @param file_lines_hiera_merge
-#   If true, load file_line resources from Hiera instead of the file_lines parameter.
+#   Whether to load file_line definitions from Hiera using deep merge.
 #
 # @param files_hiera_merge
-#   If true, load file resources from Hiera instead of the files parameter.
+#   Whether to load file definitions from Hiera using deep merge.
 #
 # @param mounts_hiera_merge
-#   If true, load mount resources from Hiera instead of the mounts parameter.
+#   Whether to load mount definitions from Hiera using deep merge.
 #
 # @param packages_hiera_merge
-#   If true, load package resources from Hiera instead of the packages parameter.
+#   Whether to load package definitions from Hiera using deep merge.
 #
 # @param selbooleans_hiera_merge
-#   If true, load selboolean resources from Hiera instead of the selbooleans parameter.
+#   Whether to load SELinux boolean definitions from Hiera using deep merge.
 #
 # @param services_hiera_merge
-#   If true, load service resources from Hiera instead of the services parameter.
+#   Whether to load service definitions from Hiera using deep merge.
+#
+# @example Basic usage with direct parameters
+#   class { 'types':
+#     packages => {
+#       'htop' => { 'ensure' => 'present' },
+#       'vim'  => { 'ensure' => 'latest' },
+#     },
+#   }
+#
+# @example Using Hiera data (recommended)
+#   # In Hiera:
+#   # types::packages:
+#   #   git:
+#   #     ensure: latest
+#   #   vim:
+#   #     ensure: present
+#
+#   class { 'types':
+#     packages_hiera_merge: true,
+#   }
+#
+# @example Mixed usage (override specific resources)
+#   class { 'types':
+#     packages_hiera_merge => true,
+#     packages => {
+#       'custom-package' => { 'ensure' => 'present' },
+#     },
+#   }
 class types (
   Optional[Hash] $crons                   = undef,
   Optional[Hash] $execs                   = undef,
@@ -74,6 +108,7 @@ class types (
   Variant[Boolean, String] $selbooleans_hiera_merge = true,
   Variant[Boolean, String] $services_hiera_merge    = true,
 ) {
+  # Convert string values to Boolean
   $crons_hiera_merge_real       = Boolean($crons_hiera_merge)
   $execs_hiera_merge_real       = Boolean($execs_hiera_merge)
   $file_lines_hiera_merge_real  = Boolean($file_lines_hiera_merge)
@@ -83,12 +118,14 @@ class types (
   $selbooleans_hiera_merge_real = Boolean($selbooleans_hiera_merge)
   $services_hiera_merge_real    = Boolean($services_hiera_merge)
 
-  if $crons != undef {
-    $crons_real = $crons_hiera_merge_real ? {
-      true  => lookup('types::crons', { merge => 'deep', default_value => {} }),
-      false => $crons,
-    }
-
+  # ------------------------------------------------------------------
+  # Crons
+  # ------------------------------------------------------------------
+  $crons_real = $crons_hiera_merge_real ? {
+    true  => lookup('types::crons', { merge => 'deep', default_value => {} }),
+    false => $crons,
+  }
+  if $crons_real and $crons_real != {} {
     $crons_real.each |$title, $params| {
       types::cron { $title:
         * => $params,
@@ -96,12 +133,14 @@ class types (
     }
   }
 
-  if $execs != undef {
-    $execs_real = $execs_hiera_merge_real ? {
-      true  => lookup('types::execs', { merge => 'deep', default_value => {} }),
-      false => $execs,
-    }
-
+  # ------------------------------------------------------------------
+  # Execs
+  # ------------------------------------------------------------------
+  $execs_real = $execs_hiera_merge_real ? {
+    true  => lookup('types::execs', { merge => 'deep', default_value => {} }),
+    false => $execs,
+  }
+  if $execs_real and $execs_real != {} {
     $execs_real.each |$title, $params| {
       types::exec { $title:
         * => $params,
@@ -109,12 +148,14 @@ class types (
     }
   }
 
-  if $file_lines != undef {
-    $file_lines_real = $file_lines_hiera_merge_real ? {
-      true  => lookup('types::file_lines', { merge => 'deep', default_value => {} }),
-      false => $file_lines,
-    }
-
+  # ------------------------------------------------------------------
+  # File_lines
+  # ------------------------------------------------------------------
+  $file_lines_real = $file_lines_hiera_merge_real ? {
+    true  => lookup('types::file_lines', { merge => 'deep', default_value => {} }),
+    false => $file_lines,
+  }
+  if $file_lines_real and $file_lines_real != {} {
     $file_lines_real.each |$title, $params| {
       types::file_line { $title:
         * => $params,
@@ -122,12 +163,14 @@ class types (
     }
   }
 
-  if $files != undef {
-    $files_real = $files_hiera_merge_real ? {
-      true  => lookup('types::files', { merge => 'deep', default_value => {} }),
-      false => $files,
-    }
-
+  # ------------------------------------------------------------------
+  # Files
+  # ------------------------------------------------------------------
+  $files_real = $files_hiera_merge_real ? {
+    true  => lookup('types::files', { merge => 'deep', default_value => {} }),
+    false => $files,
+  }
+  if $files_real and $files_real != {} {
     $files_real.each |$title, $params| {
       types::file { $title:
         * => $params,
@@ -135,12 +178,14 @@ class types (
     }
   }
 
-  if $mounts != undef {
-    $mounts_real = $mounts_hiera_merge_real ? {
-      true  => lookup('types::mounts', { merge => 'deep', default_value => {} }),
-      false => $mounts,
-    }
-
+  # ------------------------------------------------------------------
+  # Mounts
+  # ------------------------------------------------------------------
+  $mounts_real = $mounts_hiera_merge_real ? {
+    true  => lookup('types::mounts', { merge => 'deep', default_value => {} }),
+    false => $mounts,
+  }
+  if $mounts_real and $mounts_real != {} {
     $mounts_real.each |$title, $params| {
       types::mount { $title:
         * => $params,
@@ -148,12 +193,14 @@ class types (
     }
   }
 
-  if $packages != undef {
-    $packages_real = $packages_hiera_merge_real ? {
-      true  => lookup('types::packages', { merge => 'deep', default_value => {} }),
-      false => $packages,
-    }
-
+  # ------------------------------------------------------------------
+  # Packages
+  # ------------------------------------------------------------------
+  $packages_real = $packages_hiera_merge_real ? {
+    true  => lookup('types::packages', { merge => 'deep', default_value => {} }),
+    false => $packages,
+  }
+  if $packages_real and $packages_real != {} {
     $packages_real.each |$title, $params| {
       types::package { $title:
         * => $params,
@@ -161,12 +208,14 @@ class types (
     }
   }
 
-  if $selbooleans != undef {
-    $selbooleans_real = $selbooleans_hiera_merge_real ? {
-      true  => lookup('types::selbooleans', { merge => 'deep', default_value => {} }),
-      false => $selbooleans,
-    }
-
+  # ------------------------------------------------------------------
+  # Selbooleans
+  # ------------------------------------------------------------------
+  $selbooleans_real = $selbooleans_hiera_merge_real ? {
+    true  => lookup('types::selbooleans', { merge => 'deep', default_value => {} }),
+    false => $selbooleans,
+  }
+  if $selbooleans_real and $selbooleans_real != {} {
     $selbooleans_real.each |$title, $params| {
       types::selboolean { $title:
         * => $params,
@@ -174,12 +223,14 @@ class types (
     }
   }
 
-  if $services != undef {
-    $services_real = $services_hiera_merge_real ? {
-      true  => lookup('types::services', { merge => 'deep', default_value => {} }),
-      false => $services,
-    }
-
+  # ------------------------------------------------------------------
+  # Services
+  # ------------------------------------------------------------------
+  $services_real = $services_hiera_merge_real ? {
+    true  => lookup('types::services', { merge => 'deep', default_value => {} }),
+    false => $services,
+  }
+  if $services_real and $services_real != {} {
     $services_real.each |$title, $params| {
       types::service { $title:
         * => $params,

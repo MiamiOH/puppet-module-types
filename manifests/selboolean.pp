@@ -1,7 +1,5 @@
 # == Define: types::selboolean
 #
-# == Define: types::selboolean
-#
 # @summary
 #   Manage SELinux booleans in a standardized way.
 #

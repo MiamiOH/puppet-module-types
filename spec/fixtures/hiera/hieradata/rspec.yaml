@@ -1,0 +1,13 @@
+---
+types::services:
+  nginx:
+    ensure: running
+    enable: true
+  mysql:
+    ensure: stopped
+
+types::packages:
+  git:
+    ensure: latest
+  vim:
+    ensure: present

@@ -1,7 +1,5 @@
 # == Define: types::file_line
 #
-# == Define: types::file_line
-#
 # @summary
 #   Manage individual lines in a file using the file_line resource.
 #

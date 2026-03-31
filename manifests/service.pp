@@ -1,7 +1,5 @@
 # == Define: types::service
 #
-# == Define: types::service
-#
 # @summary
 #   Manage services in a standardized way.
 #

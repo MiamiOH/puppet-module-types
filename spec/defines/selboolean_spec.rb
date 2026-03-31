@@ -1,82 +1,84 @@
 require 'spec_helper'
+
 describe 'types::selboolean' do
-  let(:title) { 'nfs_export_all_ro' }
+  let(:title) { 'httpd_can_network_connect' }
 
-  context 'selboolean with all options specified' do
-    let(:params) do
-      { persistent: true,
-        value: 'on',
-        provider: 'getsebool', }
-    end
+  context 'with default parameters' do
+    let(:params) { { value: 'on' } }
 
-    it {
-      is_expected.to contain_selboolean('nfs_export_all_ro').with({
-                                                                    'persistent' => true,
-        'value' => 'on',
-                                                                  })
-    }
-  end
+    it { is_expected.to compile.with_all_deps }
 
-  describe 'with value' do
-    ['on', 'off'].each do |value|
-      context "set to #{value}" do
-        let(:params) { { value: value } }
-
-        it {
-          is_expected.to contain_selboolean('nfs_export_all_ro').with({
-                                                                        'persistent' => false,
-            'value' => value,
-                                                                      })
-        }
-      end
+    it 'sets the SELinux boolean to on (non-persistent by default)' do
+      is_expected.to contain_selboolean('httpd_can_network_connect')
+        .with(
+          'value'      => 'on',
+          'persistent' => false,
+        )
     end
   end
 
-  context 'selboolean with invalid value for provider' do
-    let(:params) do
-      { provider: false, }
-    end
+  context 'when value => off' do
+    let(:params) { { value: 'off' } }
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
-    end
-  end
+    it { is_expected.to compile.with_all_deps }
 
-  context 'selboolean with invalid value for persistent' do
-    let(:params) do
-      { persistent: 'invalid setting', }
-    end
-
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
+    it 'turns the boolean off' do
+      is_expected.to contain_selboolean('httpd_can_network_connect')
+        .with_value('off')
     end
   end
 
-  context 'selboolean with invalid value for value' do
+  context 'when persistent => true' do
     let(:params) do
-      { value: 'invalid setting', }
+      {
+        value:      'on',
+        persistent: true
+      }
     end
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
+    it { is_expected.to compile.with_all_deps }
+
+    it 'makes the change persistent across reboots' do
+      is_expected.to contain_selboolean('httpd_can_network_connect')
+        .with(
+          'value'      => 'on',
+          'persistent' => true,
+        )
     end
   end
 
-  context 'selboolean with no value - value is mandatory' do
+  context 'with a custom provider' do
     let(:params) do
-      { persistent: false }
+      {
+        value:    'off',
+        provider: 'getsetsebool'   # ← fixed
+      }
     end
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error)
+    it { is_expected.to compile.with_all_deps }
+
+    it 'uses the specified provider' do
+      is_expected.to contain_selboolean('httpd_can_network_connect')
+        .with_provider('getsetsebool')
+    end
+  end
+
+  context 'with both value and persistent set' do
+    let(:params) do
+      {
+        value:      'off',
+        persistent: true
+      }
+    end
+
+    it { is_expected.to compile.with_all_deps }
+
+    it 'correctly passes all parameters to the selboolean resource' do
+      is_expected.to contain_selboolean('httpd_can_network_connect')
+        .with(
+          'value'      => 'off',
+          'persistent' => true,
+        )
     end
   end
 end

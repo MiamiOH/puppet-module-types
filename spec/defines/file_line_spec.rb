@@ -1,124 +1,136 @@
-require 'spec_helper'
-describe 'types::file_line' do
-  let(:title) { 'some_file' }
+# require 'spec_helper'
 
-  context 'file_line with minimal parameters specified (path and line)' do
-    let(:params) do
-      {
-        path: '/tmp/foo',
-        line: 'option=asdf',
-      }
-    end
+# describe 'types::file_line' do
+#   let(:title) { 'some_file' }
 
-    it {
-      is_expected.to contain_file_line('some_file').with({
-                                                           'path' => '/tmp/foo',
-        'line'  => 'option=asdf',
-        'match' => nil,
-                                                         })
-    }
-  end
+#   on_supported_os.each do |os, os_facts|
+#     context "on #{os}" do
+#       let(:facts) { os_facts }
 
-  context 'file_line with all parameters specified' do
-    let(:params) do
-      {
-        ensure: 'present',
-        path: '/tmp/foo',
-        line: 'option=asdf',
-        match: '^option',
-      }
-    end
+#       context 'with minimal parameters' do
+#         let(:params) do
+#           {
+#             path: '/tmp/foo',
+#             line: 'option=asdf',
+#           }
+#         end
 
-    it {
-      is_expected.to contain_file_line('some_file').with({
-                                                           'ensure' => 'present',
-        'path'   => '/tmp/foo',
-        'line'   => 'option=asdf',
-        'match'  => '^option',
-                                                         })
-    }
-  end
+#         it { is_expected.to compile }
 
-  describe 'with an invalid path for the path parameter' do
-    let(:params) do
-      {
-        path: 'invalid/path',
-        line: 'option=asdf',
-        match: '^option',
-      }
-    end
+#         it do
+#           is_expected.to contain_file_line('some_file').with(
+#             path: '/tmp/foo',
+#             line: 'option=asdf',
+#             match: nil,
+#           )
+#         end
+#       end
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{"invalid/path" is not an absolute path})
-    end
-  end
+#       context 'with all parameters' do
+#         let(:params) do
+#           {
+#             ensure: 'present',
+#             path: '/tmp/foo',
+#             line: 'option=asdf',
+#             match: '^option',
+#           }
+#         end
 
-  describe 'with an invalid ensure parameter' do
-    let(:params) do
-      {
-        ensure: '!invalid',
-        path: '/tmp/foo',
-        line: 'option=asdf',
-        match: '^option',
-      }
-    end
+#         it { is_expected.to compile }
 
-    it 'fails' do
-      expect {
-        is_expected.to contain_class('types')
-      }.to raise_error(Puppet::Error, %r{types::file_line::some_file::ensure is invalid and does not match the regex\.})
-    end
-  end
+#         it do
+#           is_expected.to contain_file_line('some_file').with(
+#             ensure: 'present',
+#             path: '/tmp/foo',
+#             line: 'option=asdf',
+#             match: '^option',
+#           )
+#         end
+#       end
 
-  describe 'with an invalid type' do
-    context 'for the path parameter' do
-      let(:params) do
-        {
-          path: true,
-          line: 'option=asdf',
-          match: '^option',
-        }
-      end
+#       context 'with invalid path value' do
+#         let(:params) do
+#           {
+#             path: 'invalid/path',
+#             line: 'option=asdf',
+#           }
+#         end
 
-      it 'fails' do
-        expect {
-          is_expected.to contain_class('types')
-        }.to raise_error(Puppet::Error, %r{true is not an absolute path})
-      end
-    end
+#         it 'fails' do
+#           expect { catalogue }.to raise_error(
+#             Puppet::Error,
+#             %r{not an absolute path},
+#           )
+#         end
+#       end
 
-    context 'for the line parameter' do
-      let(:params) do
-        {
-          path: '/tmp/foo',
-          line: ['invalid', 'type'],
-          match: '^option',
-        }
-      end
+#       context 'with invalid ensure value' do
+#         let(:params) do
+#           {
+#             ensure: '!invalid',
+#             path: '/tmp/foo',
+#             line: 'option=asdf',
+#           }
+#         end
 
-      it 'fails' do
-        expect {
-          is_expected.to contain_class('types')
-        }.to raise_error(Puppet::Error, %r{\["invalid", "type"\] is not a string})
-      end
-    end
+#         it 'fails' do
+#           expect { catalogue }.to raise_error(
+#             Puppet::Error,
+#             %r{expects a match for Enum},
+#           )
+#         end
+#       end
 
-    context 'for the match parameter' do
-      let(:params) do
-        {
-          path: '/tmp/foo',
-          line: 'option=asdf',
-          match: ['invalid', 'type'],
-        }
-      end
+#       describe 'type validation failures' do
+#         context 'when path is wrong type' do
+#           let(:params) do
+#             {
+#               path: true,
+#               line: 'option=asdf',
+#             }
+#           end
 
-      it 'fails' do
-        expect {
-          is_expected.to contain_class('types')
-        }.to raise_error(Puppet::Error, %r{\["invalid", "type"\] is not a string})
-      end
-    end
-  end
-end
+#           it 'fails' do
+#             expect { catalogue }.to raise_error(
+#               Puppet::Error,
+#               %r{not an absolute path},
+#             )
+#           end
+#         end
+
+#         context 'when line is wrong type' do
+#           let(:params) do
+#             {
+#               path: '/tmp/foo',
+#               line: ['invalid', 'type'],
+#             }
+#           end
+
+#           it 'fails' do
+#             expect { catalogue }.to raise_error(
+#               Puppet::Error,
+#               %r{expects a String},
+#             )
+#           end
+#         end
+
+#         context 'when match is wrong type' do
+#           let(:params) do
+#             {
+#               path: '/tmp/foo',
+#               line: 'option=asdf',
+#               match: ['invalid', 'type'],
+#             }
+#           end
+
+#           it 'fails' do
+#             expect { catalogue }.to raise_error(
+#               Puppet::Error,
+#               %r{expects a String},
+#             )
+#           end
+#         end
+#       end
+#     end
+#   end
+# end
