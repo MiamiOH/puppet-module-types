@@ -1,121 +1,87 @@
 require 'spec_helper'
+
 describe 'types::file' do
   let(:title) { '/tmp/foo' }
 
-  context 'file with no options specified' do
-    it { should contain_file('/tmp/foo').with({
-        'ensure'  => 'present',
-        'owner'   => 'root',
-        'group'   => 'root',
-        'mode'    => '0644',
-      })
-    }
+  context 'with default parameters' do
+    it do
+      is_expected.to contain_file(title).with(
+        ensure: 'present',
+        owner:  'root',
+        group:  'root',
+        mode:   '0644',
+      )
+    end
   end
 
-  context 'file with all options specified' do
+  context 'with many parameters set' do
     let(:params) do
-      { :ensure                  => 'present',
-        :mode                    => '0777',
-        :owner                   => 'root',
-        :group                   => 'root',
-        :content                 => 'This is the content',
-        :backup                  => 'foobucket',
-        :checksum                => 'none',
-        :force                   => 'purge',
-        :ignore                  => ['.svn', '.foo'],
-        :links                   => 'follow',
-        :provider                => 'posix',
-        :purge                   => true,
-        :recurse                 => true,
-        :recurselimit            => 2,
-        :replace                 => false,
-        :selinux_ignore_defaults => false,
-        :selrange                => 's0',
-        :selrole                 => 'object_r',
-        :seltype                 => 'var_t',
-        :seluser                 => 'system_u',
-        :show_diff               => false,
-        :source                  => 'puppet://modules/types/mydir',
-        :sourceselect            => 'first',
+      {
+        ensure:       'directory',
+        mode:         '0755',
+        owner:        'www-data',
+        group:        'www-data',
+        content:      "# Managed by Puppet\n",
+        backup:       '.puppet-bak',
+        checksum:     'sha256',
+        force:        true,
+        ignore:       ['.git', '*.bak'],
+        links:        'follow',
+        purge:        true,
+        recurse:      true,
+        recurselimit: 3,
+        replace:      false,
+        show_diff:    false,
+        seluser:      'system_u',
+        selrole:      'object_r',
+        seltype:      'httpd_sys_content_t',
+        selrange:     's0'
       }
     end
 
-    it {
-      should contain_file('/tmp/foo').with({
-        'ensure'                  => 'present',
-        'mode'                    => '0777',
-        'owner'                   => 'root',
-        'group'                   => 'root',
-        'content'                 => 'This is the content',
-        'backup'                  => 'foobucket',
-        'checksum'                => 'none',
-        'force'                   => 'purge',
-        'ignore'                  => ['.svn', '.foo'],
-        'links'                   => 'follow',
-        'provider'                => 'posix',
-        'purge'                   => true,
-        'recurse'                 => true,
-        'recurselimit'            => 2,
-        'replace'                 => false,
-        'selinux_ignore_defaults' => false,
-        'selrange'                => 's0',
-        'selrole'                 => 'object_r',
-        'seltype'                 => 'var_t',
-        'seluser'                 => 'system_u',
-        'show_diff'               => false,
-        'source'                  => 'puppet://modules/types/mydir',
-        'sourceselect'            => 'first',
-      })
-    }
+    it { is_expected.to compile }
+    it { is_expected.to contain_file(title).with(**params) }
   end
 
-  describe 'with ensure' do
-    ['present','absent','file','directory','link'].each do |value|
-      context "set to #{value}" do
-        let(:params) { { :ensure => value } }
+  describe 'ensure parameter' do
+    ['present', 'absent', 'file', 'directory', 'link'].each do |val|
+      context "with ensure => #{val}" do
+        let(:params) { { ensure: val } }
 
-        it { should contain_file('/tmp/foo').with({
-            'ensure'  => value,
-            'owner'   => 'root',
-            'group'   => 'root',
-            'mode'    => '0644',
-          })
-        }
+        it { is_expected.to compile }
+        it { is_expected.to contain_file(title).with_ensure(val) }
+      end
+    end
+
+    context 'with invalid ensure' do
+      let(:params) { { ensure: 'broken' } }
+
+      it { is_expected.not_to compile }
+    end
+  end
+
+  describe 'mode parameter' do
+    ['0644', '0755', '0440', '1755'].each do |val|
+      context "with mode => #{val}" do
+        let(:params) { { mode: val } }
+
+        it { is_expected.to compile }
+        it { is_expected.to contain_file(title).with_mode(val) }
+      end
+    end
+
+    ['666', '10644', 'abc', '06441', '064'].each do |val|
+      context "with invalid mode => #{val}" do
+        let(:params) { { mode: val } }
+
+        it { is_expected.not_to compile }
       end
     end
   end
 
-  context 'file with invalid ensure' do
-    let(:params) { { :ensure => 'invalid' } }
+  context 'when both content and source are set' do
+    let(:params) { { content: 'hi', source: 'puppet:///test' } }
 
-    it 'should fail' do
-      expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/types::file::\/tmp\/foo::ensure is invalid and does not match the regex\./)
-    end
-  end
-
-  describe 'file with mode set to invalid' do
-    ['666',665,'10666','foo',true].each do |value|
-      context "value of #{value}" do
-        let(:params) { { :mode => 'invalid' } }
-
-        it 'should fail' do
-          expect {
-            should contain_class('types')
-          }.to raise_error(Puppet::Error,/types::file::\/tmp\/foo::mode must be exactly 4 digits\./)
-        end
-      end
-    end
-  end
-
-  context 'file with name that is not an absolute path' do
-    let(:params) { { :ensure => 'invalid/path' } }
-
-    it 'should fail' do
-      expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/types::file::\/tmp\/foo::ensure is invalid and does not match the regex\./)
-    end
+    it { is_expected.not_to compile }
   end
 end

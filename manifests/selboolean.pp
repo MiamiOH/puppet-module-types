@@ -1,18 +1,19 @@
 # == Define: types::selboolean
 #
+# @summary
+#   Manage SELinux booleans in a standardized way.
+#
+# @param value
+#   The desired value of the SELinux boolean, either 'on' or 'off'.
+# @param persistent
+#   Whether the change should persist across reboots.
+# @param provider
+#   Optional provider to use for managing SELinux booleans.
 define types::selboolean (
-  $value,
-  $persistent = false,
-  $provider   = undef,
+  Enum['on','off'] $value,
+  Boolean $persistent = false,
+  Optional[String] $provider = undef,
 ) {
-
-  validate_re($value, '^(on)|(off)$',
-    "types::selboolean::${name}::value is invalid should be 'on' or 'off'.")
-  validate_bool($persistent)
-  if $provider != undef {
-    validate_string($provider)
-  }
-
   selboolean { $name:
     value      => $value,
     persistent => $persistent,

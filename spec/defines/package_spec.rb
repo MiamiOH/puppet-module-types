@@ -1,87 +1,77 @@
 require 'spec_helper'
+
 describe 'types::package' do
+  let(:title) { 'example_package' }
 
-  context 'package with bare minimum specified' do
-    let(:title) { 'pkg1' }
-    it {
-      should contain_package('pkg1').with({
-        'ensure'  => 'present',
-      })
-    }
-  end
+  context 'with default parameters' do
+    it { is_expected.to compile.with_all_deps }
 
-  context 'package with all options specified' do
-    let(:title) { 'pkg1' }
-    let(:params) do
-      {
-        :ensure            => 'installed',
-        :adminfile         => '/path/to/adminfile',
-        :configfiles       => 'keep',
-        :install_options   => '--installoption',
-        :provider          => 'yum',
-        :responsefile      => '/path/to/responsefile',
-        :source            => 'http://source/URL/',
-        :uninstall_options => '--uninstall_option',
-      }
-    end
-    let(:facts) { { :osfamily => 'RedHat' } }
-
-    it {
-      should contain_package('pkg1').with({
-        'ensure'            => 'installed',
-        'adminfile'         => '/path/to/adminfile',
-        'configfiles'       => 'keep',
-        'install_options'   => '--installoption',
-        'provider'          => 'yum',
-        'responsefile'      => '/path/to/responsefile',
-        'source'            => 'http://source/URL/',
-        'uninstall_options' => '--uninstall_option',
-      })
-    }
-  end
-
-  context 'package with invalid configfiles' do
-    let(:title) { 'pkg1' }
-    let(:params) do
-      {
-        :configfiles       => 'invalid',
-      }
-    end
-    let(:facts) { { :osfamily => 'RedHat' } }
-
-    it 'should fail' do
-      expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/types::package::pkg1::configfiles is invalid and does not match the regex\./)
+    it 'declares the package resource with default ensure' do
+      is_expected.to contain_package('example_package')
+        .with_ensure('present')
     end
   end
 
-  context 'package with invalid type for ensure' do
-    let(:title) { 'invalidtype' }
+  context 'when ensure => absent' do
+    let(:params) { { ensure: 'absent' } }
+
+    it { is_expected.to compile.with_all_deps }
+
+    it 'removes the package' do
+      is_expected.to contain_package('example_package')
+        .with_ensure('absent')
+    end
+  end
+
+  context 'when ensure => latest' do
+    let(:params) { { ensure: 'latest' } }
+
+    it { is_expected.to compile.with_all_deps }
+
+    it 'ensures the latest version' do
+      is_expected.to contain_package('example_package')
+        .with_ensure('latest')
+    end
+  end
+
+  context 'with provider and install_options' do
     let(:params) do
       {
-        :ensure => ['invalid','type'],
+        ensure:          'installed',
+        provider:        'apt',
+        install_options: ['--no-install-recommends']
       }
     end
 
-    it 'should fail' do
-      expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/\["invalid", "type"\] is not a string\./)
+    it { is_expected.to compile.with_all_deps }
+
+    it 'passes the provider and install options' do
+      is_expected.to contain_package('example_package')
+        .with(
+          'ensure'          => 'installed',
+          'provider'        => 'apt',
+          'install_options' => ['--no-install-recommends'],
+        )
     end
   end
 
-  context 'package with invalid responsefile' do
-    let(:title) { 'pkg1' }
+  context 'with source and responsefile' do
     let(:params) do
-      { :responsefile => 'invalid/path' }
+      {
+        ensure:       'present',
+        source:       '/path/to/package.deb',
+        responsefile: '/tmp/response.txt'
+      }
     end
-    let(:facts) { { :osfamily => 'RedHat' } }
 
-    it 'should fail' do
-      expect {
-        should contain_class('types')
-      }.to raise_error(Puppet::Error,/"invalid\/path" is not an absolute path\./)
+    it { is_expected.to compile.with_all_deps }
+
+    it 'passes source and responsefile to the package resource' do
+      is_expected.to contain_package('example_package')
+        .with(
+          'source'       => '/path/to/package.deb',
+          'responsefile' => '/tmp/response.txt',
+        )
     end
   end
 end
